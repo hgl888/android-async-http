@@ -18,16 +18,16 @@
 
 package com.loopj.android.http;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpRequestRetryHandler;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.AbstractHttpClient;
-import org.apache.http.protocol.HttpContext;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.client.HttpRequestRetryHandler;
+import cz.msebera.android.httpclient.client.methods.HttpUriRequest;
+import cz.msebera.android.httpclient.impl.client.AbstractHttpClient;
+import cz.msebera.android.httpclient.protocol.HttpContext;
 
 /**
  * Internal class, representing the HttpRequest, done in asynchronous manner
@@ -37,8 +37,8 @@ public class AsyncHttpRequest implements Runnable {
     private final HttpContext context;
     private final HttpUriRequest request;
     private final ResponseHandlerInterface responseHandler;
-    private int executionCount;
     private final AtomicBoolean isCancelled = new AtomicBoolean();
+    private int executionCount;
     private boolean cancelIsNotified;
     private volatile boolean isFinished;
     private boolean isRequestPreProcessed;
@@ -180,7 +180,7 @@ public class AsyncHttpRequest implements Runnable {
                     // switching between WI-FI and mobile data networks can cause a retry which then results in an UnknownHostException
                     // while the WI-FI is initialising. The retry logic will be invoked here, if this is NOT the first retry
                     // (to assist in genuine cases of unknown host) which seems better than outright failure
-                    cause = new IOException("UnknownHostException exception: " + e.getMessage());
+                    cause = new IOException("UnknownHostException exception: " + e.getMessage(), e);
                     retry = (executionCount > 0) && retryHandler.retryRequest(e, ++executionCount, context);
                 } catch (NullPointerException e) {
                     // there's a bug in HttpClient 4.0.x that on some occasions causes
@@ -203,7 +203,7 @@ public class AsyncHttpRequest implements Runnable {
         } catch (Exception e) {
             // catch anything else to ensure failure message is propagated
             AsyncHttpClient.log.e("AsyncHttpRequest", "Unhandled exception origin cause", e);
-            cause = new IOException("Unhandled exception: " + e.getMessage());
+            cause = new IOException("Unhandled exception: " + e.getMessage(), cause);
         }
 
         // cleaned up to throw IOException

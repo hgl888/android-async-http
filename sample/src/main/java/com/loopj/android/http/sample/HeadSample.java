@@ -1,7 +1,5 @@
 /*
-    Android Asynchronous Http Client Sample
-    Copyright (c) 2014 Marek Sebera <marek.sebera@gmail.com>
-    https://loopj.com
+    Copyright (c) 2015 Marek Sebera <marek.sebera@gmail.com>
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -15,10 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-
 package com.loopj.android.http.sample;
-
-import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -28,57 +23,37 @@ import com.loopj.android.http.ResponseHandlerInterface;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpEntity;
 
-public class CancelRequestByTagSample extends ThreadingTimeoutSample {
+public class HeadSample extends FileSample {
 
-    private static final String LOG_TAG = "CancelRequestByTagSample";
-    private static final Integer REQUEST_TAG = 132435;
-
-    @Override
-    public int getSampleTitle() {
-        return R.string.title_cancel_tag;
-    }
-
-    @Override
-    public void onCancelButtonPressed() {
-        Log.d(LOG_TAG, "Canceling requests by TAG: " + REQUEST_TAG);
-        getAsyncHttpClient().cancelRequestsByTAG(REQUEST_TAG, false);
-    }
+    private static final String LOG_TAG = "HeadSample";
 
     @Override
     public ResponseHandlerInterface getResponseHandler() {
         return new AsyncHttpResponseHandler() {
-
-            private final int id = counter++;
-
-            @Override
-            public void onStart() {
-                setStatus(id, "TAG:" + getTag() + ", START");
-            }
-
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                setStatus(id, "SUCCESS");
+                debugStatusCode(LOG_TAG, statusCode);
+                debugHeaders(LOG_TAG, headers);
+                debugResponse(LOG_TAG, String.format("Response of size: %d", responseBody == null ? 0 : responseBody.length));
             }
 
             @Override
-            public void onFinish() {
-                setStatus(id, "FINISH");
+            public void onProgress(long bytesWritten, long totalSize) {
+                addView(getColoredView(LIGHTRED, String.format("Progress %d from %d", bytesWritten, totalSize)));
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                setStatus(id, "FAILURE");
-            }
-
-            @Override
-            public void onCancel() {
-                setStatus(id, "CANCEL");
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+                debugStatusCode(LOG_TAG, statusCode);
+                debugHeaders(LOG_TAG, headers);
+                debugThrowable(LOG_TAG, throwable);
+                debugResponse(LOG_TAG, String.format("Response of size: %d", responseBody == null ? 0 : responseBody.length));
             }
         };
     }
 
     @Override
     public RequestHandle executeSample(AsyncHttpClient client, String URL, Header[] headers, HttpEntity entity, ResponseHandlerInterface responseHandler) {
-        return client.get(this, URL, headers, null, responseHandler).setTag(REQUEST_TAG);
+        return client.head(this, URL, headers, null, responseHandler);
     }
 }

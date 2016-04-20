@@ -1,12 +1,13 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion '22.0.1'
+    compileSdkVersion 23
+    buildToolsVersion '23.0.1'
 
     defaultConfig {
         minSdkVersion 3
-        targetSdkVersion 22
+        targetSdkVersion 23
+        consumerProguardFiles 'proguard.txt'
     }
 
     lintOptions {
@@ -23,6 +24,10 @@ android {
     }
 }
 
+dependencies {
+    compile 'cz.msebera.android:httpclient:4.3.6'
+}
+
 android.libraryVariants.all { variant ->
     def name = variant.buildType.name
     def task = project.tasks.create "jar${name.capitalize()}", Jar
@@ -32,3 +37,11 @@ android.libraryVariants.all { variant ->
 }
 
 apply from: '../maven_push.gradle'
+
+afterEvaluate { project ->
+    android.libraryVariants.all { variant ->
+        tasks.androidJavadocs.doFirst {
+            classpath += files(variant.javaCompile.classpath.files)
+        }
+    }
+}
